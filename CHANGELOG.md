@@ -14,3 +14,7 @@
     required AppLoader loader,
     required ValueNotifier<MaterialLoaderStatus> fetchStatus,
   })]
+
+## 1.1.1
+
+* Fix `null_check_operator_used_on_null_value` error

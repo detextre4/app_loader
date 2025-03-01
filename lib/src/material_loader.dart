@@ -26,15 +26,15 @@ class MaterialLoader extends StatefulWidget {
   final MaterialApp materialApp;
 
   /// The color of the material.
-  final Color Function(BuildContext context)? materialColor;
+  final Color Function(BuildContext? context)? materialColor;
 
   /// Duration of the splash screen animation.
   final Duration animationDuration;
 
   /// Function to fetch data.
   /// Receives [loader], [fetchStatus], and [navigatorKey] as parameters.
-  final Future<void> Function(
-    BuildContext context, {
+  final Future<void> Function({
+    BuildContext? context,
     required AppLoader loader,
     required ValueNotifier<MaterialLoaderStatus> fetchStatus,
   }) onFetchData;
@@ -102,7 +102,7 @@ class _MaterialLoaderState extends State<MaterialLoader>
 
   /// Function to fetch data by calling [widget.onFetchData].
   Future<void> onFetchData() async => await widget.onFetchData(
-        navigatorKey.currentContext!,
+        context: navigatorKey.currentContext,
         fetchStatus: fetchStatus,
         loader: loader,
       );
@@ -138,7 +138,7 @@ class _MaterialLoaderState extends State<MaterialLoader>
     if (shouldShowCurrentMaterial) {
       return Material(
         color: widget.materialColor != null
-            ? widget.materialColor!(navigatorKey.currentContext!)
+            ? widget.materialColor!(navigatorKey.currentContext)
             : Theme.of(context).colorScheme.tertiary,
         child: widget.materialApp,
       );

@@ -9,8 +9,8 @@ void main() {
     const splashTextKey = Key('splashText');
     const homeTextKey = Key('homeText');
 
-    Future<void> onFetchData(
-      BuildContext context, {
+    Future<void> onFetchData({
+      BuildContext? context,
       required AppLoader loader,
       required ValueNotifier<MaterialLoaderStatus> fetchStatus,
     }) async {
