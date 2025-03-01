@@ -9,10 +9,10 @@ void main() {
     const splashTextKey = Key('splashText');
     const homeTextKey = Key('homeText');
 
-    Future<void> onFetchData({
+    Future<void> onFetchData(
+      BuildContext context, {
       required AppLoader loader,
       required ValueNotifier<MaterialLoaderStatus> fetchStatus,
-      required GlobalKey<NavigatorState> navigatorKey,
     }) async {
       // Simulate a delay for fetching data.
       await Future.delayed(const Duration(seconds: 1));

@@ -33,10 +33,10 @@ class MaterialLoader extends StatefulWidget {
 
   /// Function to fetch data.
   /// Receives [loader], [fetchStatus], and [navigatorKey] as parameters.
-  final Future<void> Function({
+  final Future<void> Function(
+    BuildContext context, {
     required AppLoader loader,
     required ValueNotifier<MaterialLoaderStatus> fetchStatus,
-    required GlobalKey<NavigatorState> navigatorKey,
   }) onFetchData;
 
   /// Function to handle the transition to the next material after data loading.
@@ -102,9 +102,9 @@ class _MaterialLoaderState extends State<MaterialLoader>
 
   /// Function to fetch data by calling [widget.onFetchData].
   Future<void> onFetchData() async => await widget.onFetchData(
+        navigatorKey.currentContext!,
         fetchStatus: fetchStatus,
         loader: loader,
-        navigatorKey: navigatorKey,
       );
 
   @override
