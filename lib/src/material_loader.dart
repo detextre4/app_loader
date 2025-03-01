@@ -26,7 +26,7 @@ class MaterialLoader extends StatefulWidget {
   final MaterialApp materialApp;
 
   /// The color of the material.
-  final Color? materialColor;
+  final Color Function(BuildContext context)? materialColor;
 
   /// Duration of the splash screen animation.
   final Duration animationDuration;
@@ -137,7 +137,9 @@ class _MaterialLoaderState extends State<MaterialLoader>
     // Render the original MaterialApp
     if (shouldShowCurrentMaterial) {
       return Material(
-        color: widget.materialColor ?? Theme.of(context).colorScheme.tertiary,
+        color: widget.materialColor != null
+            ? widget.materialColor!(navigatorKey.currentContext!)
+            : Theme.of(context).colorScheme.tertiary,
         child: widget.materialApp,
       );
     }
