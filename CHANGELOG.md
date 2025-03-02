@@ -22,3 +22,7 @@
 ## 1.2.0
 
 * Added new widget [AppLoaderWrapper]
+
+## 1.2.1
+
+* Fix [AppLoaderWrapper] export
