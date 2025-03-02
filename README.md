@@ -41,30 +41,34 @@ class MyApp extends StatelessWidget {
     final theme = Theme.of(context);
 
     return AppLoaderWrapper(
-      defaultLoader: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 70,
-                height: 70,
-                child: CircularProgressIndicator(
-                  strokeWidth: 8,
-                  color: theme.colorScheme.secondary,
-                  backgroundColor: theme.colorScheme.primary,
-                ),
+      loaderOptions: LoaderOptions(
+        builder: (context, message, colors, textStyle) {
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 8,
+                      color: theme.colorScheme.secondary,
+                      backgroundColor: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    style: theme.primaryTextTheme.titleLarge,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                style: theme.primaryTextTheme.titleLarge,
-              ),
-            ],
-          ),
-        )
+            )
+          );
+        }
       ),
       child: MaterialApp(
         home: Scaffold(
