@@ -26,3 +26,7 @@
 ## 1.2.1
 
 * Fix [AppLoaderWrapper] export
+
+## 1.3.0+stable
+
+* Created [LoaderOptions] class to setup the rendering loader widget.

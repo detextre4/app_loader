@@ -1,19 +1,20 @@
+import 'package:app_loader/app_loader.dart';
 import 'package:flutter/material.dart';
 
 class AppLoaderWrapper extends StatelessWidget {
   const AppLoaderWrapper({
     super.key,
     required this.child,
-    this.defaultLoader,
+    this.loaderOptions,
     this.openCondition,
     this.closeCondition,
   });
 
-  /// child to be wrapped by the [AppLoaderWrapper]
+  /// Child to be wrapped by the [AppLoaderWrapper]
   final Widget child;
 
-  /// The child widget to display inside the loader.
-  final Widget? defaultLoader;
+  /// Options used to render de loader widget.
+  final LoaderOptions? loaderOptions;
 
   /// Condition for opening the loader.
   final bool Function()? openCondition;

@@ -1,11 +1,50 @@
 import 'dart:async';
 
 import 'package:app_loader/app_loader.dart';
-import 'package:app_loader/src/loader_wrapper.dart';
 import 'package:app_loader/src/utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+
+/// Options used to render de loader widget.
+class LoaderOptions {
+  const LoaderOptions({
+    this.builder,
+    this.textStyle,
+    this.colors,
+  });
+
+  /// TextStyle of the rendered loader text.
+  final TextStyle Function(BuildContext context)? textStyle;
+
+  /// Colors of the rendered loader widget.
+  final (Color color, Color backgroundColor) Function(BuildContext context)?
+      colors;
+
+  /// The child widget to display inside the loader.
+  final Widget Function(
+    BuildContext context,
+    String message,
+    (Color color, Color backgroundColor)? colors,
+    TextStyle? textStyle,
+  )? builder;
+
+  LoaderOptions copyWith({
+    TextStyle Function(BuildContext context)? textStyle,
+    (Color color, Color backgroundColor) Function(BuildContext context)? colors,
+    Widget Function(
+      BuildContext context,
+      String message,
+      (Color color, Color backgroundColor)? colors,
+      TextStyle? textStyle,
+    )? builder,
+  }) =>
+      LoaderOptions(
+        builder: builder ?? this.builder,
+        textStyle: textStyle ?? this.textStyle,
+        colors: colors ?? this.colors,
+      );
+}
 
 /// Global loader used for asynchronous processes.
 /// If it should be used on initState, need to call with
@@ -13,30 +52,43 @@ import 'package:flutter/scheduler.dart';
 class AppLoader {
   AppLoader(
     this.context, {
-    this.child,
-    this.openCondition,
-    this.closeCondition,
-  }) : defaultAppLoaderConfig = Utils.defaultAppLoaderConfig(context);
+    LoaderOptions? loaderOptions,
+    bool Function()? openCondition,
+    bool Function()? closeCondition,
+  }) {
+    final defaultAppLoaderConfig = Utils.defaultAppLoaderConfig(context);
+
+    this.loaderOptions = loaderOptions?.copyWith(
+            builder: loaderOptions.builder) ??
+        defaultAppLoaderConfig?.loaderOptions
+            ?.copyWith(builder: defaultAppLoaderConfig.loaderOptions?.builder);
+
+    this.loaderOptions = loaderOptions?.copyWith(
+            colors: loaderOptions.colors) ??
+        defaultAppLoaderConfig?.loaderOptions
+            ?.copyWith(colors: defaultAppLoaderConfig.loaderOptions?.colors);
+
+    this.loaderOptions =
+        loaderOptions?.copyWith(textStyle: loaderOptions.textStyle) ??
+            defaultAppLoaderConfig?.loaderOptions?.copyWith(
+                textStyle: defaultAppLoaderConfig.loaderOptions?.textStyle);
+
+    this.openCondition = openCondition ?? defaultAppLoaderConfig?.openCondition;
+    this.closeCondition =
+        closeCondition ?? defaultAppLoaderConfig?.closeCondition;
+  }
 
   /// The BuildContext of the widget where the loader will be displayed.
   final BuildContext context;
 
-  /// Default AppLoader configuration.
-  final AppLoaderWrapper? defaultAppLoaderConfig;
-
-  /// The child widget to display inside the loader.
-  final Widget? child;
-  Widget? get _child => child ?? defaultAppLoaderConfig?.defaultLoader;
+  /// Options used to render de loader widget.
+  LoaderOptions? loaderOptions;
 
   /// Condition for opening the loader.
-  final bool Function()? openCondition;
-  bool Function()? get _openCondition =>
-      openCondition ?? defaultAppLoaderConfig?.openCondition;
+  bool Function()? openCondition;
 
   /// Condition for closing the loader.
-  final bool Function()? closeCondition;
-  bool Function()? get _closeCondition =>
-      closeCondition ?? defaultAppLoaderConfig?.closeCondition;
+  bool Function()? closeCondition;
 
   BuildContext? loaderContext;
   var cancelToken = CancelToken();
@@ -73,7 +125,7 @@ class AppLoader {
   void close<T>({T? value, bool cancelCurrentToken = false}) {
     if (disposed ||
         !loading ||
-        (_closeCondition != null && !_closeCondition!())) {
+        (closeCondition != null && !closeCondition!())) {
       return;
     }
 
@@ -107,7 +159,7 @@ class AppLoader {
     void Function(CancelToken cancelToken)? onUserWillPop,
     CancelToken? customCancelToken,
   }) async {
-    if (disposed || loading || (_openCondition != null && !_openCondition!())) {
+    if (disposed || loading || (openCondition != null && !openCondition!())) {
       return null;
     }
 
@@ -115,27 +167,40 @@ class AppLoader {
     cancelToken = CancelToken();
     final loaderContextSet = Completer<void>();
 
-    if (!disposed && loading) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            if (loading) loaderContext ??= context;
+    showDialog(
+        context: context,
+        builder: (context) {
+          if (loading) loaderContext ??= context;
 
-            if (!loaderContextSet.isCompleted) loaderContextSet.complete();
+          if (!loaderContextSet.isCompleted) loaderContextSet.complete();
 
-            return WillPopCustom(
-              onWillPop: () async {
-                if (onUserWillPop != null) {
-                  close(cancelCurrentToken: true);
-                  customCancelToken?.cancel();
-                  onUserWillPop(customCancelToken ?? cancelToken);
-                }
-                return false;
-              },
-              child: _child ?? _AppLoader<T>(message: message),
-            );
-          });
-    }
+          return WillPopCustom(
+            onWillPop: () async {
+              if (onUserWillPop != null) {
+                close(cancelCurrentToken: true);
+                customCancelToken?.cancel();
+                onUserWillPop(customCancelToken ?? cancelToken);
+              }
+              return false;
+            },
+            child: loaderOptions?.builder != null
+                ? loaderOptions!.builder!(
+                    context,
+                    message,
+                    loaderOptions?.colors != null
+                        ? loaderOptions!.colors!(context)
+                        : null,
+                    loaderOptions?.textStyle != null
+                        ? loaderOptions!.textStyle!(context)
+                        : null,
+                  )
+                : _AppLoader<T>(
+                    message: message,
+                    textStyle: loaderOptions?.textStyle,
+                    colors: loaderOptions?.colors,
+                  ),
+          );
+        });
 
     if (future != null) {
       try {
@@ -156,11 +221,21 @@ class AppLoader {
 
 /// A widget representing the loader UI.
 class _AppLoader<T> extends StatelessWidget {
-  const _AppLoader({required this.message})
-      : super(key: const Key('loader_widget'));
+  const _AppLoader({
+    required this.message,
+    this.textStyle,
+    this.colors,
+  }) : super(key: const Key('loader_widget'));
 
   /// The message to display inside the loader.
   final String message;
+
+  /// TextStyle of the rendered loader text.
+  final TextStyle Function(BuildContext context)? textStyle;
+
+  /// Colors of the rendered loader widget.
+  final (Color color, Color backgroundColor) Function(BuildContext context)?
+      colors;
 
   @override
   Widget build(BuildContext context) {
@@ -170,25 +245,30 @@ class _AppLoader<T> extends StatelessWidget {
         backgroundColor: Colors.transparent,
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 70,
-                height: 70,
-                child: CircularProgressIndicator(
-                  strokeWidth: 8,
-                  color: theme.colorScheme.secondary,
-                  backgroundColor: theme.colorScheme.primary,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 70,
+                  height: 70,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 8,
+                    color: colors != null
+                        ? colors!(context).$1
+                        : theme.colorScheme.secondary,
+                    backgroundColor: colors != null
+                        ? colors!(context).$2
+                        : theme.colorScheme.primary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                style: theme.primaryTextTheme.titleLarge,
-              ),
-            ],
-          ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: textStyle != null
+                      ? textStyle!(context)
+                      : theme.primaryTextTheme.titleLarge,
+                ),
+              ]),
         ));
   }
 }
