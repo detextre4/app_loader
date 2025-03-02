@@ -18,3 +18,7 @@
 ## 1.1.1
 
 * Fix `null_check_operator_used_on_null_value` error
+
+## 1.2.0
+
+* Added new widget [AppLoaderWrapper]

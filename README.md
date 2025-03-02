@@ -14,18 +14,86 @@ Add `app_loader` to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  app_loader: ^1.1.1
+  app_loader: ^1.2.0
 ```
 
 Then run flutter pub get to install the package.
 
 ## Usage
 
+### AppLoaderWrapper
+
+The AppLoaderWrapper widget is used set default values in the AppLoader.
+
+### Example: Basic usage to wrap the MaterialApp
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:app_loader/app_loader.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AppLoaderWrapper(
+      defaultLoader: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 70,
+                height: 70,
+                child: CircularProgressIndicator(
+                  strokeWidth: 8,
+                  color: theme.colorScheme.secondary,
+                  backgroundColor: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: theme.primaryTextTheme.titleLarge,
+              ),
+            ],
+          ),
+        )
+      ),
+      child: MaterialApp(
+        home: Scaffold(
+          body: Center(child: Text('Home Page')),
+        ),
+      )
+    );
+  }
+
+  Future<void> onFetchData({
+    required AppLoader loader,
+    required ValueNotifier<MaterialLoaderStatus> fetchStatus,
+    required GlobalKey<NavigatorState> navigatorKey,
+  }) async {
+    await Future.delayed(const Duration(seconds: 2)); // Simulate data fetch
+    fetchStatus.value = MaterialLoaderStatus.done;
+  }
+
+  Future<void> onNextMaterial(VoidCallback handleNextMaterial) async {
+    handleNextMaterial();
+  }
+}
+```
+
 ### AppLoader
 
 The AppLoader widget is used to display a global loader for asynchronous processes.
 
-### Example: Basic usage to handle a counter
+### Example: Basic usage to open and close loader
 
 ```dart
 import 'package:flutter/material.dart';

@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:app_loader/app_loader.dart';
+import 'package:app_loader/src/loader_wrapper.dart';
+import 'package:app_loader/src/utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 /// Global loader used for asynchronous processes.
 /// If it should be used on initState, need to call with
@@ -13,19 +16,27 @@ class AppLoader {
     this.child,
     this.openCondition,
     this.closeCondition,
-  });
+  }) : defaultAppLoaderConfig = Utils.defaultAppLoaderConfig(context);
 
   /// The BuildContext of the widget where the loader will be displayed.
   final BuildContext context;
 
+  /// Default AppLoader configuration.
+  final AppLoaderWrapper? defaultAppLoaderConfig;
+
   /// The child widget to display inside the loader.
   final Widget? child;
+  Widget? get _child => child ?? defaultAppLoaderConfig?.defaultLoader;
 
   /// Condition for opening the loader.
   final bool Function()? openCondition;
+  bool Function()? get _openCondition =>
+      openCondition ?? defaultAppLoaderConfig?.openCondition;
 
   /// Condition for closing the loader.
   final bool Function()? closeCondition;
+  bool Function()? get _closeCondition =>
+      closeCondition ?? defaultAppLoaderConfig?.closeCondition;
 
   BuildContext? loaderContext;
   var cancelToken = CancelToken();
@@ -62,7 +73,7 @@ class AppLoader {
   void close<T>({T? value, bool cancelCurrentToken = false}) {
     if (disposed ||
         !loading ||
-        (closeCondition != null && !closeCondition!())) {
+        (_closeCondition != null && !_closeCondition!())) {
       return;
     }
 
@@ -96,34 +107,40 @@ class AppLoader {
     void Function(CancelToken cancelToken)? onUserWillPop,
     CancelToken? customCancelToken,
   }) async {
-    if (disposed || loading || (openCondition != null && !openCondition!())) {
+    if (disposed || loading || (_openCondition != null && !_openCondition!())) {
       return null;
     }
 
     controller.value = true;
     cancelToken = CancelToken();
+    final loaderContextSet = Completer<void>();
 
-    showDialog(
-        context: context,
-        builder: (context) {
-          if (controller.value) loaderContext ??= context;
+    if (!disposed && loading) {
+      showDialog(
+          context: context,
+          builder: (context) {
+            if (loading) loaderContext ??= context;
 
-          return WillPopCustom(
-            onWillPop: () async {
-              if (onUserWillPop != null) {
-                close(cancelCurrentToken: true);
-                customCancelToken?.cancel();
-                onUserWillPop(customCancelToken ?? cancelToken);
-              }
-              return false;
-            },
-            child: child ?? _AppLoader<T>(message: message),
-          );
-        });
+            if (!loaderContextSet.isCompleted) loaderContextSet.complete();
+
+            return WillPopCustom(
+              onWillPop: () async {
+                if (onUserWillPop != null) {
+                  close(cancelCurrentToken: true);
+                  customCancelToken?.cancel();
+                  onUserWillPop(customCancelToken ?? cancelToken);
+                }
+                return false;
+              },
+              child: _child ?? _AppLoader<T>(message: message),
+            );
+          });
+    }
 
     if (future != null) {
       try {
         final value = await future(customCancelToken ?? cancelToken);
+        await loaderContextSet.future;
 
         close(value: value);
         return value;
