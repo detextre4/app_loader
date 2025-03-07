@@ -14,7 +14,7 @@ Add `app_loader` to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  app_loader: ^1.3.0
+  app_loader: ^1.4.0
 ```
 
 Then run flutter pub get to install the package.

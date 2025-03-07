@@ -30,3 +30,9 @@
 ## 1.3.0+stable
 
 * Created [LoaderOptions] class to setup the rendering loader widget.
+
+## 1.4.0
+
+* Added [message] field to LoaderOptions.
+
+* Added [CancelToken] to future field on [loader.start] method.

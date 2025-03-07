@@ -9,10 +9,14 @@ import 'package:flutter/scheduler.dart';
 /// Options used to render de loader widget.
 class LoaderOptions {
   const LoaderOptions({
+    this.message,
     this.builder,
     this.textStyle,
     this.colors,
   });
+
+  /// Custom message to show in the loader rendering by default.
+  final String? message;
 
   /// TextStyle of the rendered loader text.
   final TextStyle Function(BuildContext context)? textStyle;
@@ -30,6 +34,7 @@ class LoaderOptions {
   )? builder;
 
   LoaderOptions copyWith({
+    String? message,
     TextStyle Function(BuildContext context)? textStyle,
     (Color color, Color backgroundColor) Function(BuildContext context)? colors,
     Widget Function(
@@ -40,6 +45,7 @@ class LoaderOptions {
     )? builder,
   }) =>
       LoaderOptions(
+        message: message ?? this.message,
         builder: builder ?? this.builder,
         textStyle: textStyle ?? this.textStyle,
         colors: colors ?? this.colors,
@@ -57,6 +63,11 @@ class AppLoader {
     bool Function()? closeCondition,
   }) {
     final defaultAppLoaderConfig = Utils.defaultAppLoaderConfig(context);
+
+    this.loaderOptions = loaderOptions?.copyWith(
+            message: loaderOptions.message) ??
+        defaultAppLoaderConfig?.loaderOptions
+            ?.copyWith(message: defaultAppLoaderConfig.loaderOptions?.message);
 
     this.loaderOptions = loaderOptions?.copyWith(
             builder: loaderOptions.builder) ??
@@ -140,13 +151,17 @@ class AppLoader {
   }
 
   /// Starts the loader and optionally executes an asynchronous function [future].
-  Future<T?> start<T>({Future<T> Function()? future}) async {
+  Future<T?> start<T>({
+    Future<T> Function(CancelToken cancelToken)? future,
+    CancelToken? customCancelToken,
+  }) async {
     if (disposed || loading) return null;
     controller.value = true;
     cancelToken = CancelToken();
 
     if (future != null) {
-      return await future().whenComplete(() => controller.value = false);
+      return await future(customCancelToken ?? cancelToken)
+          .whenComplete(() => controller.value = false);
     }
 
     return null;
@@ -154,7 +169,7 @@ class AppLoader {
 
   /// Opens the loader with a custom [message]. Optionally executes an asynchronous function [future].
   Future<T?> open<T>({
-    String message = "Processing...",
+    String? message,
     Future<T> Function(CancelToken cancelToken)? future,
     void Function(CancelToken cancelToken)? onUserWillPop,
     CancelToken? customCancelToken,
@@ -162,6 +177,8 @@ class AppLoader {
     if (disposed || loading || (openCondition != null && !openCondition!())) {
       return null;
     }
+
+    final getMessage = message ?? loaderOptions?.message ?? "Processing...";
 
     controller.value = true;
     cancelToken = CancelToken();
@@ -186,7 +203,7 @@ class AppLoader {
             child: loaderOptions?.builder != null
                 ? loaderOptions!.builder!(
                     context,
-                    message,
+                    getMessage,
                     loaderOptions?.colors != null
                         ? loaderOptions!.colors!(context)
                         : null,
@@ -195,7 +212,7 @@ class AppLoader {
                         : null,
                   )
                 : _AppLoader<T>(
-                    message: message,
+                    message: getMessage,
                     textStyle: loaderOptions?.textStyle,
                     colors: loaderOptions?.colors,
                   ),
