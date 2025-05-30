@@ -174,7 +174,10 @@ class AppLoader {
     void Function(CancelToken cancelToken)? onUserWillPop,
     CancelToken? customCancelToken,
   }) async {
-    if (disposed || loading || (openCondition != null && !openCondition!())) {
+    if (!context.mounted ||
+        disposed ||
+        loading ||
+        (openCondition != null && !openCondition!())) {
       return null;
     }
 

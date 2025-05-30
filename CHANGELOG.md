@@ -36,3 +36,7 @@
 * Added [message] field to LoaderOptions.
 
 * Added [CancelToken] to future field on [loader.start] method.
+
+## 1.4.1
+
+* Added a check for `context.mounted` in the `open` method to prevent errors when the widget is no longer in the tree.
