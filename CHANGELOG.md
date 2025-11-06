@@ -40,3 +40,7 @@
 ## 1.4.1
 
 * Added a check for `context.mounted` in the `open` method to prevent errors when the widget is no longer in the tree.
+
+## 1.4.2
+
+* Fix `WillPopCustom` in ios, bug that avoid to use gesture to close modal barriers.
