@@ -44,3 +44,7 @@
 ## 1.4.2
 
 * Fix `WillPopCustom` in ios, bug that avoid to use gesture to close modal barriers.
+
+## 1.4.3
+
+* Added `useRootNavigator` parameter to `open` method.

@@ -173,6 +173,7 @@ class AppLoader {
     Future<T> Function(CancelToken cancelToken)? future,
     void Function(CancelToken cancelToken)? onUserWillPop,
     CancelToken? customCancelToken,
+    bool useRootNavigator = false,
   }) async {
     if (!context.mounted ||
         disposed ||
@@ -188,6 +189,7 @@ class AppLoader {
     final loaderContextSet = Completer<void>();
 
     showDialog(
+        useRootNavigator: useRootNavigator,
         context: context,
         builder: (context) {
           if (loading) loaderContext ??= context;
